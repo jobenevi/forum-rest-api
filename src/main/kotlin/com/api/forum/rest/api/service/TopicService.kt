@@ -7,21 +7,22 @@ import com.api.forum.rest.api.exception.NotFoundException
 import com.api.forum.rest.api.mapper.TopicFormMapper
 import com.api.forum.rest.api.mapper.TopicViewMapper
 import com.api.forum.rest.api.model.Topic
+import com.api.forum.rest.api.repository.TopicRepository
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
 @Service
 class TopicService(
-    private var topics: List<Topic> = ArrayList(),
+    private val repository: TopicRepository,
     private val topicViewMapper: TopicViewMapper,
     private val topicFormMapper: TopicFormMapper,
     private val notFoundMessage: String = "Topic not found"
 ) {
 
     fun getTopicList(): List<TopicViewResponse> {
-        return topics.stream().map { t ->
-            topicViewMapper.map(t)
-        }.collect(Collectors.toList())
+        return repository.findAll().stream()
+            .map { topicViewMapper.map(it) }
+            .collect(Collectors.toList())
     }
 
     fun getTopicById(id: Long): TopicViewResponse {
@@ -31,38 +32,26 @@ class TopicService(
 
     fun createTopic(request: TopicFormRequest): TopicViewResponse {
         val topic = topicFormMapper.map(request)
-        topic.id = topics.size.toLong() + 1
-        topics = topics.plus(topic)
+        repository.save(topic)
         return topicViewMapper.map(topic)
     }
 
     fun updateTopicById(request: TopicUpdateFormRequest): TopicViewResponse {
         val topic = findTopicById(request.id)
 
-        val topicUpdated = Topic(
-            id = request.id,
-            title = request.title,
-            message = request.message,
-            user = topic.user,
-            course = topic.course,
-            answers = topic.answers,
-            dateCreated = topic.dateCreated
-        )
+        topic.title = request.title
+        topic.message = request.message
 
-        topics = topics.minus(topic).plus(topicUpdated)
-
-        return topicViewMapper.map(topicUpdated)
+        return topicViewMapper.map(topic)
     }
 
     fun deleteTopicById(id: Long) {
-        val topic = findTopicById(id)
-        topics = topics.minus(topic)
+        repository.deleteById(id)
     }
 
     private fun findTopicById(id: Long): Topic {
-        val topic = topics.stream().filter { t ->
-            t.id == id
-        }.findFirst().orElseThrow { NotFoundException(notFoundMessage) }
+        val topic = repository.findById(id)
+            .orElseThrow { NotFoundException(notFoundMessage) }
         return topic
     }
 
