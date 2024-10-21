@@ -4,6 +4,7 @@ import com.api.forum.rest.api.controller.request.TopicFormRequest
 import com.api.forum.rest.api.controller.request.TopicUpdateFormRequest
 import com.api.forum.rest.api.controller.response.TopicViewResponse
 import com.api.forum.rest.api.service.TopicService
+import jakarta.transaction.Transactional
 import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -33,6 +34,7 @@ class TopicController(private val service: TopicService) {
     }
 
     @PostMapping
+    @Transactional
     fun createTopic(
         @RequestBody @Valid request: TopicFormRequest,
         uriBuilder: UriComponentsBuilder
@@ -43,12 +45,14 @@ class TopicController(private val service: TopicService) {
     }
 
     @PutMapping()
+    @Transactional
     fun updateTopic(@RequestBody @Valid request: TopicUpdateFormRequest): ResponseEntity<TopicViewResponse> {
         val topicViewResponse = service.updateTopicById(request)
         return ResponseEntity.ok(topicViewResponse)
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteTopic(@PathVariable id: Long) {
         service.deleteTopicById(id)

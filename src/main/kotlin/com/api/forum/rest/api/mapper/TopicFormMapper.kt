@@ -16,7 +16,7 @@ class TopicFormMapper(
             title = t.title,
             message = t.message,
             course = courseService.findCourseById(t.courseId),
-            user = userService.findUserById(t.userId)
+            userForum = userService.findUserById(t.userId)
         )
     }
 
